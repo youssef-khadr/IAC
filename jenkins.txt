@@ -23,6 +23,26 @@ pipeline {
         }
       }
     }
+    stage('Push Image To ECR') {
+      steps {
+        dir('/mnt/Windows/ykData/Onica/Projects/IFBI/IAC'){
+          script {
+            def repoURL = sh (returnStdout: true, script:'terraform output ecrRepositoryURL')
+            def awsRegion = sh (returnStdout: true, script:'terraform output awsRegion')
+          
+            sh "docker tag my-container:latest ${repoURL}"
+            sh "aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${repoURL}"
+            sh "docker push ${repoURL}:latest"
+          }
+        }
+      }
+    }
+    
  }
 
 }
+sh 'aws ecr get-login-password --region "${awsRegion}" | docker login --username AWS --password-stdin "${repoURL}"'
+
+def command = $/"echo aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${repoURL}"/$
+res = sh(returnStdout: true, script: command).trim()
+sh("echo ${res}")
