@@ -1,0 +1,66 @@
+[
+  {
+    "name": "poc-${environment}",
+    "image": "${app_image}",
+    "cpu": ${fargate_cpu},
+    "memory": ${fargate_memory},
+    "networkMode": "awsvpc",
+    "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/poc-${environment}",
+          "awslogs-region": "${aws_region}",
+          "awslogs-stream-prefix": "ecs"
+        }
+    },
+    "portMappings": [
+      {
+        "containerPort": ${app_port},
+        "hostPort": ${app_port},
+        "protocol": "tcp"
+      }
+    ],
+    "environment": [
+      {
+        "name": "JAVA_OPTS",
+        "value": "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+      },
+      {
+        "name": "DB_CONN_MAXACTIVE",
+        "value": "50"
+      },
+      {
+        "name": "DB_DRIVER",
+        "value": "com.mysql.jdbc.Driver"
+      },
+      {
+        "name": "DB_URL",
+        "value": "${db_url_fa}"
+      },
+      {
+        "name": "DB_URL_RO",
+        "value": "${db_url_ro}"
+      },
+      {
+        "name": "DB_USERNAME",
+        "value": "${db_username}"
+      },
+      {
+        "name": "DB_PASSWORD",
+        "value": "${db_password}"
+      },
+      {
+        "name": "S3_CONFIG_BUCKET",
+        "value": "${s3_config_bucket_name}"
+      },
+      {
+        "name": "AWS_DEFAULT_REGION",
+        "value": "${aws_region}"
+      },
+      {
+        "name": "poc_CONFIG",
+        "value": "/poc/conf/"
+      }
+    ]
+  }
+]

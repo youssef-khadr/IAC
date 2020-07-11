@@ -1,10 +1,31 @@
-resource "aws_s3_bucket" "staticS3" {
-  bucket = "ifbi-static-us-east-1"
+resource "aws_s3_bucket" "poc-config" {
+  bucket = "poc-claims-config-${var.environment}-${data.aws_caller_identity.current_user.account_id}"
   acl    = "private"
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        #kms_master_key_id = "${aws_kms_key.kmsKey.arn}"
+        sse_algorithm     = "AES256"
+      }
+    }
+  }
+  versioning {
+    enabled = true
+  }
+
+  tags   = "${merge(
+       local.default_tags,
+       map(
+         "Name", "poc Config Bucket ${var.environment}"
+       )
+     )}"
+}
+
+resource "aws_s3_bucket" "static_data" {
+  bucket = "ifbi-poc-static-data-us-east-1"
+  acl    = "private"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
         sse_algorithm     = "AES256"
       }
     }
@@ -12,7 +33,7 @@ resource "aws_s3_bucket" "staticS3" {
 }
 
 resource "aws_s3_bucket_policy" "staticS3BucketPolicy" {
-  bucket = "${aws_s3_bucket.staticS3.id}"
+  bucket = "${aws_s3_bucket.static_data.id}"
 
   policy = <<POLICY
 {
@@ -27,14 +48,14 @@ resource "aws_s3_bucket_policy" "staticS3BucketPolicy" {
       "Action":[
         "s3:GetObject"
       ],
-      "Resource": "${aws_s3_bucket.staticS3.arn}/*"
+      "Resource": "${aws_s3_bucket.static_data.arn}/*"
     }
   ]
 }
 POLICY
 }
 resource "aws_s3_bucket_public_access_block" "staticS3PublicAccess" {
-  bucket = "${aws_s3_bucket.staticS3.id}"
+  bucket = "${aws_s3_bucket.static_data.id}"
 
   block_public_acls   = true
   block_public_policy = true
@@ -43,12 +64,11 @@ resource "aws_s3_bucket_public_access_block" "staticS3PublicAccess" {
 }
 
 resource "aws_s3_bucket" "cfLogsS3" {
-  bucket = "ifbi-cf-logs-us-east-1"
+  bucket = "ifbi-poc-cf-logs-us-east-1"
   acl    = "private"
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        #kms_master_key_id = "${aws_kms_key.kmsKey.arn}"
         sse_algorithm     = "AES256"
       }
     }
